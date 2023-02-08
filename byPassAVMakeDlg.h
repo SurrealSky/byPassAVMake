@@ -41,14 +41,22 @@ protected:
 public:
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedButton2();
-	BOOL InitDisaDate(STu8*, STu32);
-	void OnSaveAs();
+	afx_msg void OnBnClickedButton3();
+	afx_msg void OnBnClickedButton4();
 	CEdit mSecName;
 	CEdit mCodesLen;
 	MyListCtrl mList;
 	PEMake mPEMake;
-	afx_msg void OnBnClickedButton3();
 	CEdit mFileBin;
 	CEdit mDstFile;
-	afx_msg void OnBnClickedButton4();
+public:
+	void OnSaveAs();
+	BOOL InitDisaDate(STu8*, STu32);
+	void encrypt_tea(unsigned long* in, unsigned long* key, unsigned long* out);
+	void decrypt_tea(unsigned long* in, unsigned long* key, unsigned long* out);
+	void tea_encrypt(unsigned char * v, unsigned int len,unsigned char * key,unsigned char ** out,unsigned int * outlen);
+	void tea_decrypt(unsigned char* v, unsigned int len, unsigned char* key, unsigned char** out, unsigned int* outlen);
 };
+
+
+

