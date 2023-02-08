@@ -124,6 +124,10 @@ BOOL CbyPassAVMakeDlg::OnInitDialog()
 	this->mList.SetColumn(2, &co);
 	this->mList.SetColumnWidth(0, 65);
 
+	this->mCodesLen.SetWindowTextA("10");
+	::EnableWindow(mCodesLen, FALSE);
+	CheckDlgButton(IDC_CHECK4, TRUE);
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 
@@ -522,7 +526,7 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 	}
 
 	//shellcode数据添加到目标程序新区段
-	bool bRet = mPEMake.AddSectionToEnd((STu8*)strName.GetBuffer(0), pVirMem, dwVirMemSize, IMAGE_SCN_MEM_READ| IMAGE_SCN_MEM_WRITE);
+	bool bRet = mPEMake.AddSectionToEnd((STu8*)strName.GetBuffer(0), pVirMem, dwVirMemSize, IMAGE_SCN_MEM_READ| IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE);
 	if (bRet)
 	{
 		OnSaveAs();
