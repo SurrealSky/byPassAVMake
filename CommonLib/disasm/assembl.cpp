@@ -1,4 +1,4 @@
-// Free Disassembler and Assembler -- Assembler
+ï»¿// Free Disassembler and Assembler -- Assembler
 //
 // Copyright (C) 2001 Oleh Yuschuk
 //
@@ -32,7 +32,7 @@
 
 #include "disasm.h"
 
-#pragma   warning(disable:4996)//¹Ø±Õ¾Éº¯ÊýÉùÃ÷¾¯¸æ
+#pragma   warning(disable:4996)//å…³é—­æ—§å‡½æ•°å£°æ˜Žè­¦å‘Š
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// ASSEMBLER FUNCTIONS //////////////////////////////
 
@@ -2204,4 +2204,4 @@ error:
 
 //#pragma option -O.                     // Restore old optimization options
 
-  
+  

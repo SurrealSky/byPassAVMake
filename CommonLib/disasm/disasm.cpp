@@ -1,4 +1,4 @@
-// Free Disassembler and Assembler -- Disassembler
+ï»¿// Free Disassembler and Assembler -- Disassembler
 //
 // Copyright (C) 2001 Oleh Yuschuk
 //
@@ -28,11 +28,11 @@
 #include <float.h>
 #pragma hdrstop
 
-#pragma   warning(disable:4996)//¹Ø±Õ¾Éº¯ÊıÉùÃ÷¾¯¸æ
+#pragma   warning(disable:4996)//å…³é—­æ—§å‡½æ•°å£°æ˜è­¦å‘Š
 
 #include "disasm.h"
 
-//bughoho. ÎÄ¼şÀ©Õ¹Ãû¸ÄÎªcpp.°ÑÍâ²¿À©Õ¹±äÁ¿ÔÚcppÖĞÌí¼ÓÉùÃ÷
+//bughoho. æ–‡ä»¶æ‰©å±•åæ”¹ä¸ºcpp.æŠŠå¤–éƒ¨æ‰©å±•å˜é‡åœ¨cppä¸­æ·»åŠ å£°æ˜
 STs32       ideal;                // Force IDEAL decoding mode
 STs32       lowercase;            // Force lowercase display
 STs32       tabarguments;         // Tab between mnemonic and arguments
@@ -79,7 +79,7 @@ static int       mode;                 // Disassembly mode (DISASM_xxx)
 // requested and available, dump its contents. Parameter type changes decoding
 // of contents for some operand types.
 //static void DecodeRG(int index,int datasize,int type)
-//bughoho void ¸ÄÎª int ·µ»Ø½âÂëµÃµ½µÄ¼Ä´æÆ÷Ë÷Òı
+//bughoho void æ”¹ä¸º int è¿”å›è§£ç å¾—åˆ°çš„å¯„å­˜å™¨ç´¢å¼•
 static int DecodeRG(int index,int datasize,int type) 
 {
 	int sizeindex;
@@ -90,7 +90,7 @@ static int DecodeRG(int index,int datasize,int type)
 	sprintf_s(da->vm_name,"%s_REG%02d",da->vm_name,datasize*8);
 	da->optype[stoperand] = Reg;
 
-	index&=0x07;//µÃµ½¼Ä´æÆ÷Ë÷Òı
+	index&=0x07;//å¾—åˆ°å¯„å­˜å™¨ç´¢å¼•
 	if (datasize==1)
 		sizeindex=0;
 	else if (datasize==2)
@@ -112,7 +112,7 @@ static int DecodeRG(int index,int datasize,int type)
 		//bughoho
 		if( sizeindex == 0 && ( index > 3 && index < 7 ) )
 		{
-			//Îª¸ßÎ»
+			//ä¸ºé«˜ä½
 			da->highbit[stoperand] = true;
 		}
 	}
@@ -267,7 +267,7 @@ static void DecodeMR(int type)
 			inmemory=0;
 		else                               // Memory operand
 			inmemory=1;
-		//ÅĞ¶ÏÊÇÄÚ´æ²Ù×÷Êı»¹ÊÇ¼Ä´æÆ÷²Ù×÷Êı,²¢È·¶¨³¤¶È
+		//åˆ¤æ–­æ˜¯å†…å­˜æ“ä½œæ•°è¿˜æ˜¯å¯„å­˜å™¨æ“ä½œæ•°,å¹¶ç¡®å®šé•¿åº¦
 		switch (type)
 		{
 		case MRG:                        // Memory/register in ModRM byte
@@ -379,7 +379,7 @@ static void DecodeMR(int type)
 	addr=0;
 	// There are many possibilities to decode ModM/SIB address. The first
 	// possibility is register in ModM - general-purpose, MMX or 3DNow!
-	//Îª0xC0Ê±ÔòÊÇ¼Ä´æÆ÷
+	//ä¸º0xC0æ—¶åˆ™æ˜¯å¯„å­˜å™¨
 	if ((c & 0xC0)==0xC0) 
 	{              // Decode register operand
 		if (type==MR8 || type==RR8)
@@ -396,7 +396,7 @@ static void DecodeMR(int type)
 	}
 	// Next possibility: 16-bit addressing mode, very seldom in 32-bit flat model
 	// but still supported by processor. SIB byte is never used here.
-	// ÏÂÒ»¸ö¿ÉÄÜ: 16Î»µØÖ·Ä£Ê½.ÔÚ32Î»Æ½Ì¹Ä£Ê½ÏÂºÜÉÙ¼ûµ«ÊÇ´¦ÀíÆ÷ÈÔÈ»Ö§³Ö
+	// ä¸‹ä¸€ä¸ªå¯èƒ½: 16ä½åœ°å€æ¨¡å¼.åœ¨32ä½å¹³å¦æ¨¡å¼ä¸‹å¾ˆå°‘è§ä½†æ˜¯å¤„ç†å™¨ä»ç„¶æ”¯æŒ
 	if (addrsize==2)
 	{
 		if (c==0x06) 
@@ -442,7 +442,7 @@ static void DecodeMR(int type)
 		}
 	}
 	// Next possibility: immediate 32-bit address.
-	// ÏÂÒ»¸ö¿ÉÄÜ : 32Î»Á¢¼´ÊıµÄÄÚ´æµØÖ·
+	// ä¸‹ä¸€ä¸ªå¯èƒ½ : 32ä½ç«‹å³æ•°çš„å†…å­˜åœ°å€
 	else if (c==0x05) 
 	{                  // Special case of immediate address
 		dispsize=4;
@@ -548,7 +548,7 @@ static void DecodeMR(int type)
 					strcat(s,"+");
 				strcat(s,addr32[(sib>>3) & 0x07].descr);
 				da->regsscale = 1;
-				da->addrreg2 = (sib>>3) & 0x07;//µÚ2¸ö¼Ä´æÆ÷Æ«ÒÆ
+				da->addrreg2 = (sib>>3) & 0x07;//ç¬¬2ä¸ªå¯„å­˜å™¨åç§»
 				if ((sib & 0xC0)==0x40) 
 				{
 					da->jmptable=0;              // Hardly a switch!
@@ -571,7 +571,7 @@ static void DecodeMR(int type)
 		};
 	}
 	// Last possibility: 32-bit address without SIB byte.
-	// ×îºóÒ»¸ö¿ÉÄÜ: 32Î»µØÖ·
+	// æœ€åä¸€ä¸ªå¯èƒ½: 32ä½åœ°å€
 	else
 	{                               // No SIB
 		if ((c & 0xC0)==0x40)
@@ -683,7 +683,7 @@ static void DecodeIM(int constsize,int sxt,int type)
 	  return;
 
   //sprintf_s(da->vm_name,"%s_IMM%02d",da->vm_name,constsize*8);
-  sprintf_s(da->vm_name,"%s_IMM32",da->vm_name);//IMMÖ»ÓĞ32Î»
+  sprintf_s(da->vm_name,"%s_IMM32",da->vm_name);//IMMåªæœ‰32ä½
   da->optype[stoperand] = Imm;
 
   l=1+hasrm+hassib+dispsize+(immsize-constsize);
@@ -824,7 +824,7 @@ static void DecodeIA(void)
 // Decodes jump relative to nextip of size offsize.
 static void DecodeRJ(ulong offsize,ulong nextip)
 {
-	sprintf_s(da->vm_name,"%s_IMM%02d",da->vm_name,4*8);//²»¹Ü³¤Ìø¶ÌÌø¶¼ÈÏÎªÊÇ32Î»µØÖ·
+	sprintf_s(da->vm_name,"%s_IMM%02d",da->vm_name,4*8);//ä¸ç®¡é•¿è·³çŸ­è·³éƒ½è®¤ä¸ºæ˜¯32ä½åœ°å€
 	da->optype[stoperand] = Imm;
 	int i;
 	ulong addr;
@@ -837,7 +837,7 @@ static void DecodeRJ(ulong offsize,ulong nextip)
 	dispsize=offsize;                    // Interpret offset as displacement
 	if (mode<DISASM_DATA)
 		return;
-	if (offsize==1)//¶ÌÌø×ª
+	if (offsize==1)//çŸ­è·³è½¬
 	{
 		addr=(signed char)cmd[1]+nextip;
 	}
@@ -1066,7 +1066,7 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
   char name[TEXTLEN],*pname;
   const t_cmddata *pd,*pdan;
   // Prepare disassembler variables and initialize structure disasm.
-  //³õÊ¼»¯½á¹¹ºÍ±äÁ¿
+  //åˆå§‹åŒ–ç»“æ„å’Œå˜é‡
   datasize=addrsize=4;                 // 32-bit code and data segments only!
   segprefix=SEG_UNDEF;
   hasrm=hassib=0; dispsize=immsize=0;
@@ -1176,7 +1176,7 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 	  cmd++; srcip++; size--; u++; 
   }
   //bughoho
-  da->segment = segprefix;//µÃµ½¶Î¼Ä´æÆ÷
+  da->segment = segprefix;//å¾—åˆ°æ®µå¯„å­˜å™¨
   // We do have repeated prefix. Flush first prefix from the sequence.
   if (repeated)
   {
@@ -1184,7 +1184,7 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 	  {
 		  da->dump[3]='\0';                // Leave only first dumped prefix
 		  da->nprefix=1;
-		  switch (cmd[-(long)u])//cmd++ ÇÒ u++;ÕâÀïÊÇµÃµ½cmd[0]
+		  switch (cmd[-(long)u])//cmd++ ä¸” u++;è¿™é‡Œæ˜¯å¾—åˆ°cmd[0]
 		  {
 		  case 0x26: pname=(char *)(segname[SEG_ES]); 
 			  break;
@@ -1233,7 +1233,7 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
   }
   // Fetch (if available) first 3 bytes of the command, add repeat prefix and
   // find command in the command table.
-  //È¡µÃÃüÁîµÄÍ·Èı¸ö×Ö½Ú
+  //å–å¾—å‘½ä»¤çš„å¤´ä¸‰ä¸ªå­—èŠ‚
   code=0;
   if (size>0) 
 	  *(((char *)&code)+0)=cmd[0];
@@ -1247,17 +1247,17 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 	  pd=&vxdcmd;                        // Decode VxD call (Win95/98)
   else
   {
-	  for (pd=cmddata; pd->mask!=0; pd++) //´ÓÖ¸Áî±íÖĞËÑË÷
+	  for (pd=cmddata; pd->mask!=0; pd++) //ä»æŒ‡ä»¤è¡¨ä¸­æœç´¢
 	  {
 		  if (((code^pd->code) & pd->mask)!=0)
 			  continue;
-		  if (mode>=DISASM_FILE && shortstringcmds &&								//Èç¹ûÊÇ·´»ã±àÄ£Ê½,²¢ÇÒUse short form of string commands
-			  (pd->arg1==MSO || pd->arg1==MDE || pd->arg2==MSO || pd->arg2==MDE))     //Èç¹û¼Ä´æÆ÷ÊÇESI»òEDI
+		  if (mode>=DISASM_FILE && shortstringcmds &&								//å¦‚æœæ˜¯åæ±‡ç¼–æ¨¡å¼,å¹¶ä¸”Use short form of string commands
+			  (pd->arg1==MSO || pd->arg1==MDE || pd->arg2==MSO || pd->arg2==MDE))     //å¦‚æœå¯„å­˜å™¨æ˜¯ESIæˆ–EDI
 			  continue;                      // Search short form of string command
 		  break;
 	  }
   }
-  if ( (pd->type & C_TYPEMASK) == C_NOW) //Èç¹ûÊÇ3DNowÖ¸Áî
+  if ( (pd->type & C_TYPEMASK) == C_NOW) //å¦‚æœæ˜¯3DNowæŒ‡ä»¤
   {
 	  // 3DNow! commands require additional search.
 	  is3dnow=1;
@@ -1277,9 +1277,9 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
   }
 
   //bughoho 
-  da->is3dnow = is3dnow;//ÊÇ·ñÊÇ3DNow!Ö¸Áî
+  da->is3dnow = is3dnow;//æ˜¯å¦æ˜¯3DNow!æŒ‡ä»¤
 
-  if (pd->mask==0)    //ÃüÁîÎ´ÕÒµ½
+  if (pd->mask==0)    //å‘½ä»¤æœªæ‰¾åˆ°
   {                   // Command not found
 	  da->cmdtype=C_BAD;
 	  if (size<2) 
@@ -1287,35 +1287,35 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 	  else 
 		  da->error=DAE_BADCMD; 
   }
-  else//ÃüÁî¾­¹ıÈÏÖ¤
+  else//å‘½ä»¤ç»è¿‡è®¤è¯
   {                               // Command recognized, decode it
-	  da->cmdtype=pd->type;//ÃüÁîÀàĞÍ(¸½¼ÓĞÅÏ¢)
-	  cxsize=datasize;                 // Default size of ECX used as counter //ECX¼ÇÊıÆ÷µÄÄ¬ÈÏ³¤¶È
+	  da->cmdtype=pd->type;//å‘½ä»¤ç±»å‹(é™„åŠ ä¿¡æ¯)
+	  cxsize=datasize;                 // Default size of ECX used as counter //ECXè®°æ•°å™¨çš„é»˜è®¤é•¿åº¦
 	  if (segprefix==SEG_FS || segprefix==SEG_GS || lockprefix!=0)
-		  da->cmdtype|=C_RARE;             // These prefixes are rare //³öÏÖºÜÉÙµÄÃüÁî
-	  if (pd->bits==PR)//ÌØÈ¨Ö¸Áî
+		  da->cmdtype|=C_RARE;             // These prefixes are rare //å‡ºç°å¾ˆå°‘çš„å‘½ä»¤
+	  if (pd->bits==PR)//ç‰¹æƒæŒ‡ä»¤
 		  da->warnings|=DAW_PRIV;          // Privileged command (ring 0)
-	  else if (pd->bits==WP)//IOÃüÁî
+	  else if (pd->bits==WP)//IOå‘½ä»¤
 		  da->warnings|=DAW_IO;            // I/O command
 	  // Win32 programs usually try to keep stack dword-aligned, so INC ESP
 	  // (44) and DEC ESP (4C) usually don't appear in real code. Also check for
 	  // ADD ESP,imm and SUB ESP,imm (81,C4,imm32; 83,C4,imm8; 81,EC,imm32;
 	  // 83,EC,imm8).
-	  //WIN32³ÌĞòÍ¨³£»á±£³ÖÕ»µÄËÄ×Ö½Ú¶ÔÆë,ËùÒÔinc esp,dec espÒ»°ã²»»á³öÏÖÔÚÆ½³£µÄ´úÂëÖĞ,
-	  //Í¬Ñù¼ì²âadd esp,imm ºÍ sub esp,imm.
+	  //WIN32ç¨‹åºé€šå¸¸ä¼šä¿æŒæ ˆçš„å››å­—èŠ‚å¯¹é½,æ‰€ä»¥inc esp,dec espä¸€èˆ¬ä¸ä¼šå‡ºç°åœ¨å¹³å¸¸çš„ä»£ç ä¸­,
+	  //åŒæ ·æ£€æµ‹add esp,imm å’Œ sub esp,imm.
 	  if (	cmd[0]==0x44 || cmd[0]==0x4C ||
 		  (size>=3 && (cmd[0]==0x81 || cmd[0]==0x83) &&
 		  (cmd[1]==0xC4 || cmd[1]==0xEC) && (cmd[2] & 0x03)!=0) )
 	  {
-		  da->warnings|=DAW_STACK;//Õ»¾¯¸æ
-		  da->cmdtype|=C_RARE;	  //²»³£³öÏÖµÄÖ¸Áî
+		  da->warnings|=DAW_STACK;//æ ˆè­¦å‘Š
+		  da->cmdtype|=C_RARE;	  //ä¸å¸¸å‡ºç°çš„æŒ‡ä»¤
 	  }
 	  // Warn also on MOV SEG,... (8E...). Win32 works in flat mode.
-	  //¾¯¸æ mov seg,xxx ²Ù×÷,ÒòÎªWin32¹¤×÷ÔÚÆ½Ì¹Ä£Ê½
+	  //è­¦å‘Š mov seg,xxx æ“ä½œ,å› ä¸ºWin32å·¥ä½œåœ¨å¹³å¦æ¨¡å¼
 	  if (cmd[0]==0x8E)
 		  da->warnings|=DAW_SEGMENT;
 	  // If opcode is 2-byte, adjust command.
-	  //Èç¹û²Ù×÷ÂëÊÇ2×Ö½ÚµÄÔòµ÷ÕûÃüÁî
+	  //å¦‚æœæ“ä½œç æ˜¯2å­—èŠ‚çš„åˆ™è°ƒæ•´å‘½ä»¤
 	  if (pd->len==2) 
 	  {
 		  if (size==0)
@@ -1336,7 +1336,7 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 		  da->error=DAE_CROSS;
 	  // Some commands either feature non-standard data size or have bit which
 	  // allowes to select data size.
-	  //Ò»Ğ©ÃüÁîµÄÊı¾İ³¤¶È²»ÊÇ±ê×¼µÄ,¿ÉÒÔ¸Ä±ä³¤¶È´óĞ¡
+	  //ä¸€äº›å‘½ä»¤çš„æ•°æ®é•¿åº¦ä¸æ˜¯æ ‡å‡†çš„,å¯ä»¥æ”¹å˜é•¿åº¦å¤§å°
 	  if ((pd->bits & WW)!=0 && (*cmd & WW)==0)
 		  datasize=1;                      // Bit W in command set to 0
 	  else if ((pd->bits & W3)!=0 && (*cmd & W3)==0)
@@ -1433,12 +1433,12 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 		  else 
 			  arg=pd->arg3;
 		  if (arg==NNN) 
-			  break;             //Ã»ÓĞ¸ü¶àµÄ²Ù×÷ÊıÁË No more operands
+			  break;             //æ²¡æœ‰æ›´å¤šçš„æ“ä½œæ•°äº† No more operands
 		  // Arguments with arg>=PSEUDOOP are assumed operands and are not
 		  // displayed in disassembled result, so they require no delimiter.
-		  if ((mode>=DISASM_FILE) && arg<PSEUDOOP)//Ìí¼Ó¼ä¸ô
+		  if ((mode>=DISASM_FILE) && arg<PSEUDOOP)//æ·»åŠ é—´éš”
 		  {
-			  if (operand==0)//Èç¹ûÊÇÃüÁî
+			  if (operand==0)//å¦‚æœæ˜¯å‘½ä»¤
 			  {
 				  da->result[nresult++]=' ';
 				  if (tabarguments)
@@ -1446,14 +1446,14 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 					  while (nresult<8) da->result[nresult++]=' ';
 				  }
 			  }
-			  else//Èç¹ûÊÇ²Ù×÷Êı
+			  else//å¦‚æœæ˜¯æ“ä½œæ•°
 			  {
 				  da->result[nresult++]=',';
 				  if (extraspace) da->result[nresult++]=' ';
 			  }
 		  }
 		  // Decode, analyse and comment next operand of the command.
-		  //½âÂë,·ÖÎöºÍ×¢ÊÍÃüÁîµÄÏÂÒ»¸ö²Ù×÷Êı
+		  //è§£ç ,åˆ†æå’Œæ³¨é‡Šå‘½ä»¤çš„ä¸‹ä¸€ä¸ªæ“ä½œæ•°
 		  switch (arg) 
 		  {
 		  case REG:                      // Integer register in Reg field
@@ -1490,23 +1490,23 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 			  DecodeRG(REG_ECX,1,RCL);
 			  break;
 		  case RS0:                      // Top of FPU stack (ST(0))
-			  DecodeST(0,0);//Î´½â¾ö
+			  DecodeST(0,0);//æœªè§£å†³
 			  break;
 		  case RST:                      // FPU register (ST(i)) in command byte
-			  DecodeST(cmd[0],0);//Î´½â¾ö
+			  DecodeST(cmd[0],0);//æœªè§£å†³
 			  break;
 		  case RMX:                      // MMX register MMx
 			  if (size<2)
 				  da->error=DAE_CROSS;
 			  else 
-				  DecodeMX(cmd[1]>>3);//Î´½â¾ö
+				  DecodeMX(cmd[1]>>3);//æœªè§£å†³
 			  hasrm=1;
 			  break;
 		  case R3D:                      // 3DNow! register MMx
 			  if (size<2) 
 				  da->error=DAE_CROSS;
 			  else 
-				  DecodeNR(cmd[1]>>3);//Î´½â¾ö
+				  DecodeNR(cmd[1]>>3);//æœªè§£å†³
 			  hasrm=1; 
 			  break;
 		  case MRG:                      // Memory/register in ModRM byte
@@ -1551,7 +1551,7 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 			  DecodeDE();
 			  break;
 		  case MXL:                      // XLAT operand ([EBX+AL])
-			  DecodeXL();//Î´½â¾ö
+			  DecodeXL();//æœªè§£å†³
 			  break;
 		  case IMM:                      // Immediate data (8 or 16/32)
 		  case IMU:                      // Immediate unsigned data (8 or 16/32)
@@ -1561,13 +1561,13 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 				  DecodeIM(datasize,0,arg);
 			  break;
 		  case VXD:                      // VxD service (32-bit only)
-			  DecodeVX();//Î´½â¾ö
+			  DecodeVX();//æœªè§£å†³
 			  break;
 		  case IMX:                      // Immediate sign-extendable byte
 			  DecodeIM(1,datasize,arg);
 			  break;
 		  case C01:                      // Implicit constant 1 (for shifts)
-			  DecodeC1();//Î´½â¾ö
+			  DecodeC1();//æœªè§£å†³
 			  break;
 		  case IMS:                      // Immediate byte (for shifts)
 		  case IM1:                      // Immediate byte
@@ -1582,13 +1582,13 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 			  DecodeIA();				   //[imm] ok
 			  break;
 		  case JOB:                      // Immediate byte offset (for jumps)
-			  DecodeRJ(1,srcip+2);//ÎŞĞë½â¾öjmpconstÔòÊÇ
+			  DecodeRJ(1,srcip+2);//æ— é¡»è§£å†³jmpconståˆ™æ˜¯
 			  break;
 		  case JOW:                      // Immediate full offset (for jumps)
-			  DecodeRJ(datasize,srcip+datasize+1);//ÎŞĞë½â¾öjmpconstÔòÊÇ 
+			  DecodeRJ(datasize,srcip+datasize+1);//æ— é¡»è§£å†³jmpconståˆ™æ˜¯ 
 			  break;
 		  case JMF:                      // Immediate absolute far jump/call addr
-			  DecodeJF();//Î´½â¾ö
+			  DecodeJF();//æœªè§£å†³
 			  da->warnings|=DAW_FARADDR;
 			  break;
 		  case SGM:                      // Segment register in ModRM byte
@@ -1605,12 +1605,12 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 		  case CRX:                      // Control register CRx
 			  if ((cmd[1] & 0xC0)!=0xC0) 
 				  da->error=DAE_REGISTER;
-			  DecodeCR(cmd[1]);//Î´½â¾ö
+			  DecodeCR(cmd[1]);//æœªè§£å†³
 			  break;
 		  case DRX:                      // Debug register DRx
 			  if ((cmd[1] & 0xC0)!=0xC0)
 				  da->error=DAE_REGISTER;
-			  DecodeDR(cmd[1]);//Î´½â¾ö
+			  DecodeDR(cmd[1]);//æœªè§£å†³
 			  break;
 		  case PRN:                      // Near return address (pseudooperand)
 			  break;
@@ -1624,10 +1624,10 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 		  case PFL:                      // Lower byte of flags (pseudooperand)
 			  break;
 		  case PS0:                      // Top of FPU stack (pseudooperand)
-			  DecodeST(0,1);//Î´½â¾ö
+			  DecodeST(0,1);//æœªè§£å†³
 			  break;
 		  case PS1:                      // ST(1) (pseudooperand)
-			  DecodeST(1,1);//Î´½â¾ö
+			  DecodeST(1,1);//æœªè§£å†³
 			  break;
 		  case PCX:                      // CX/ECX (pseudooperand)
 			  DecodeRG(REG_ECX,cxsize,PCX); 
@@ -1656,7 +1656,7 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
 	}
     // 16-bit addressing is rare in 32-bit programs. If this is the case,
     // mark command as rare to help in analysis.
-	//16Î»µÄÑ°Ö·ÔÚ32Î»³ÌĞòÖĞÊÇÉÙ¼ûµÄ,Èç¹ûÊÇÕâÖÖÇé¿ö,ÔÚÔÚÃüÁîÖĞ¼ÓÉÏ±êÖ¾
+	//16ä½çš„å¯»å€åœ¨32ä½ç¨‹åºä¸­æ˜¯å°‘è§çš„,å¦‚æœæ˜¯è¿™ç§æƒ…å†µ,åœ¨åœ¨å‘½ä»¤ä¸­åŠ ä¸Šæ ‡å¿—
     if (addrsize!=4)
 		da->cmdtype|=C_RARE;
   }
@@ -1669,7 +1669,7 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
     else immsize=1;
   }
   // Right or wrong, command decoded. Now dump it.
-  if (da->error!=0) //Èç¹ûÃüÁîÓĞ´íÎó
+  if (da->error!=0) //å¦‚æœå‘½ä»¤æœ‰é”™è¯¯
   {                  // Hard error in command detected
     if (mode>=DISASM_FILE)
       nresult=sprintf(da->result,"???");
@@ -1695,7 +1695,7 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
     }
   }
   else
-  { //Èç¹ûÃ»ÓĞ´íÎó,dumpÃüÁî         // No hard error, dump command
+  { //å¦‚æœæ²¡æœ‰é”™è¯¯,dumpå‘½ä»¤         // No hard error, dump command
     if (mode>=DISASM_FILE) 
 	{
 		ndump+=sprintf(da->dump+ndump,"%02X",*cmd++);
@@ -1735,7 +1735,7 @@ ulong Disasm(char *src,ulong srcsize,ulong srcip,t_disasm *disasm,int disasmmode
     size-=1+hasrm+hassib+dispsize+immsize;
   }
   // Check that command is not a dangerous one.
-  //¼ì²éÃüÁîÊÇ·ñÊÇÎ£ÏÕµÄ
+  //æ£€æŸ¥å‘½ä»¤æ˜¯å¦æ˜¯å±é™©çš„
   if (mode>=DISASM_DATA) 
   {
     for (pdan=dangerous; pdan->mask!=0; pdan++)

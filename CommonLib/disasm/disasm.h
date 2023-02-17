@@ -1,4 +1,4 @@
-// Free Disassembler and Assembler -- Header file
+ï»¿// Free Disassembler and Assembler -- Header file
 //
 // Copyright (C) 2001 Oleh Yuschuk
 //
@@ -25,7 +25,7 @@ using namespace SurrealTypes;
 #define odunique
 #endif
 
-#pragma   warning(disable:4309)//¹Ø±Õ½Ø¶Ï³£ÊıÖµ¾¯¸æ
+#pragma   warning(disable:4309)//å…³é—­æˆªæ–­å¸¸æ•°å€¼è­¦å‘Š
 
 // If you prefere Borland, this will force necessary setting (but, as a side
 // effect, may cause plenty of warnings if other include files will be compiled
@@ -56,14 +56,14 @@ using namespace SurrealTypes;
 #define WP             0x81            // I/O command with bit W
 
 // All possible types of operands in 80x86. A bit more than you expected, he?
-#define NNN            0               // No operand \\ÎŞ²Ù×÷
-#define REG            1               // Integer register in Reg field             \\»ı´æÆ÷½á¹¹ÖĞµÄ¼Ä´æÆ÷
-#define RCM            2               // Integer register in command byte          \\ÃüÁî×Ö½ÚÖĞµÄ¼Ä´æÆ÷
-#define RG4            3               // Integer 4-byte register in Reg field      \\ÓÃ²»µ½PMOVMSKBÖ¸Áî
-#define RAC            4               // Accumulator (AL/AX/EAX, implicit)         \\°µÊ¾ÀÛ¼ÓÆ÷?
-#define RAX            5               // AX (2-byte, implicit)						\\°µÊ¾AX
+#define NNN            0               // No operand \\æ— æ“ä½œ
+#define REG            1               // Integer register in Reg field             \\ç§¯å­˜å™¨ç»“æ„ä¸­çš„å¯„å­˜å™¨
+#define RCM            2               // Integer register in command byte          \\å‘½ä»¤å­—èŠ‚ä¸­çš„å¯„å­˜å™¨
+#define RG4            3               // Integer 4-byte register in Reg field      \\ç”¨ä¸åˆ°PMOVMSKBæŒ‡ä»¤
+#define RAC            4               // Accumulator (AL/AX/EAX, implicit)         \\æš—ç¤ºç´¯åŠ å™¨?
+#define RAX            5               // AX (2-byte, implicit)						\\æš—ç¤ºAX
 #define RDX            6               // DX (16-bit implicit port address)
-#define RCL            7               // Implicit CL register (for shifts)         \\°µÊ¾CL¼Ä´æÆ÷
+#define RCL            7               // Implicit CL register (for shifts)         \\æš—ç¤ºCLå¯„å­˜å™¨
 #define RS0            8               // Top of FPU stack (ST(0), implicit)
 #define RST            9               // FPU register (ST(i)) in command byte
 #define RMX            10              // MMX register MMx
@@ -110,9 +110,9 @@ using namespace SurrealTypes;
 #define JOW            51              // Immediate full offset (for jumps)
 #define JMF            52              // Immediate absolute far jump/call addr
 #define SGM            53              // Segment register in ModRM byte
-#define SCM            54              // ¶Î¼Ä´æÆ÷      Segment register in command byte
-#define CRX            55              // CRx¿ØÖÆ¼Ä´æÆ÷ Control register CRx
-#define DRX            56              // DRxµ÷ÊÔ¼Ä´æÆ÷ Debug register DRx
+#define SCM            54              // æ®µå¯„å­˜å™¨      Segment register in command byte
+#define CRX            55              // CRxæ§åˆ¶å¯„å­˜å™¨ Control register CRx
+#define DRX            56              // DRxè°ƒè¯•å¯„å­˜å™¨ Debug register DRx
 // Pseudooperands (implicit operands, never appear in assembler commands). Must
 // have index equal to or exceeding PSEUDOOP.
 #define PRN            (PSEUDOOP+0)    // Near return address
@@ -144,7 +144,7 @@ typedef struct t_addrdec
 	int            defseg;
 	char           *descr;
 } t_addrdec;
-//ÃüÁîÊı¾İ
+//å‘½ä»¤æ•°æ®
 typedef struct t_cmddata
 {
 	ulong          mask;                 // Mask for first 4 bytes of the command
@@ -169,7 +169,7 @@ extern const char      *mmxname[9];
 extern const char      *crname[9];
 extern const char      *drname[9];
 extern const char      *condition[16];
-extern const t_cmddata cmddata[];//¿ÉÓÃ½á¹¹Êı×é
+extern const t_cmddata cmddata[];//å¯ç”¨ç»“æ„æ•°ç»„
 extern const t_cmddata vxdcmd;
 extern const t_cmddata dangerous[];
 
@@ -193,7 +193,7 @@ extern const t_cmddata dangerous[];
 #define REG_ESI        6
 #define REG_EDI        7
 
-#define SEG_UNDEF     -1			   //Ã»ÓĞ¶Î¼Ä´æÆ÷
+#define SEG_UNDEF     -1			   //æ²¡æœ‰æ®µå¯„å­˜å™¨
 #define SEG_ES         0               // Indexes of segment/selector registers
 #define SEG_CS         1
 #define SEG_SS         2
@@ -278,7 +278,7 @@ extern const t_cmddata dangerous[];
 #define DAW_STACK      0x0080          // Unaligned stack operation
 #define DAW_DANGER95   0x1000          // May mess up Win95 if executed
 #define DAW_DANGEROUS  0x3000          // May mess up any OS if executed
-//bughoho ²Ù×÷ÊıÀàĞÍ
+//bughoho æ“ä½œæ•°ç±»å‹
 enum Optype
 {
 	Imm,
@@ -298,7 +298,7 @@ typedef struct t_disasm
 	int            indexed;              // Address contains register(s)
 	ulong          jmpconst;             // Constant jump address
 	ulong          jmptable;             // Possible address of switch table
-	ulong          adrconst;             // [edx+100] '100' µØÖ·²¿·ÖµÄ³£Á¿ Constant part of address
+	ulong          adrconst;             // [edx+100] '100' åœ°å€éƒ¨åˆ†çš„å¸¸é‡ Constant part of address
 	ulong          immconst;             // Immediate constant
 	int            zeroconst;            // Whether contains zero constant
 	int            fixupoffset;          // Possible offset of 32-bit fixups
@@ -307,45 +307,45 @@ typedef struct t_disasm
 	int            warnings;             // Combination of DAW_xxx
 
 	//bughoho new
-	uchar		   hexcode[TEXTLEN];	 //2½øÖÆÂë
-	int			   codelen;				 //³¤¶È
+	uchar		   hexcode[TEXTLEN];	 //2è¿›åˆ¶ç 
+	int			   codelen;				 //é•¿åº¦
 
-	int			   optype[3];				 // ²Ù×÷ÊıÀàĞÍ
-	char		   vm_name[TEXTLEN];	 // Éù³ÆVM¶ÔÓ¦µÄHandlerÃû³Æ
-	int			   is3dnow;				 // 3dnowº¯Êı
-	int			   segment;				 // ¶ÎÇ°×º
-	int			   reg[3];				 // 3¼Ä´æÆ÷(¼ÙÉè²Ù×÷ÊıÎª¼Ä´æÆ÷)
-	int			   segreg;				 // ¶Î¼Ä´æÆ÷(¼ÙÉè²Ù×÷ÊıÎª¶Î¼Ä´æÆ÷)
-	int			   addrreg1;			 // ÄÚ´æµØÖ·²¿·ÖµÄµÚ1¸ö²»´ø±ÈÀıµÄ¼Ä´æÆ÷
-	int			   addrreg2;			 // ÄÚ´æµØÖ·²¿·ÖµÄµÚ2¸ö´ø±ÈÀıµÄ¼Ä´æÆ÷
-	int			   regsscale;			 // ±ÈÀı:1,2,4,8
-	//»¹ÓĞÒ»¸öadrconstÒÑ¾­¶¨Òå,¸ù¾İÕı¸ººÅÀ´¶¨Òå¼Ó¼õ
-	int			   memsize[3];			 // ²Ù×÷Êı³¤¶È
-	bool		   highbit[3];			 // µ±ÊÇ8Î»Ö¸ÁîÊ±²¢ÇÒÎª¸ßÎ»Ê±(ah bh ch dh)Îª1
+	int			   optype[3];				 // æ“ä½œæ•°ç±»å‹
+	char		   vm_name[TEXTLEN];	 // å£°ç§°VMå¯¹åº”çš„Handleråç§°
+	int			   is3dnow;				 // 3dnowå‡½æ•°
+	int			   segment;				 // æ®µå‰ç¼€
+	int			   reg[3];				 // 3å¯„å­˜å™¨(å‡è®¾æ“ä½œæ•°ä¸ºå¯„å­˜å™¨)
+	int			   segreg;				 // æ®µå¯„å­˜å™¨(å‡è®¾æ“ä½œæ•°ä¸ºæ®µå¯„å­˜å™¨)
+	int			   addrreg1;			 // å†…å­˜åœ°å€éƒ¨åˆ†çš„ç¬¬1ä¸ªä¸å¸¦æ¯”ä¾‹çš„å¯„å­˜å™¨
+	int			   addrreg2;			 // å†…å­˜åœ°å€éƒ¨åˆ†çš„ç¬¬2ä¸ªå¸¦æ¯”ä¾‹çš„å¯„å­˜å™¨
+	int			   regsscale;			 // æ¯”ä¾‹:1,2,4,8
+	//è¿˜æœ‰ä¸€ä¸ªadrconstå·²ç»å®šä¹‰,æ ¹æ®æ­£è´Ÿå·æ¥å®šä¹‰åŠ å‡
+	int			   memsize[3];			 // æ“ä½œæ•°é•¿åº¦
+	bool		   highbit[3];			 // å½“æ˜¯8ä½æŒ‡ä»¤æ—¶å¹¶ä¸”ä¸ºé«˜ä½æ—¶(ah bh ch dh)ä¸º1
 } t_disasm;
 
-//»ã±àCodeÃüÁî½á¹¹
+//æ±‡ç¼–Codeå‘½ä»¤ç»“æ„
 struct CodeNode
 {
 	t_disasm	disasm;
-	STbool		IsJmcType;//Ìø×ª
-	STbool		IsJmcFromType;//´ÓÆäËûµØ·½Ìø×ª¹ıÀ´µÄ´úÂë
-	STbool		IsJmcBeSideType;//Ìøµ½Íâ²¿µÄÖ¸Áî
-	STbool		IsJmcUndefineType;//Ìøµ½´úÂëÄÚ²»Ã÷È·µÄµØÖ·
-	STbool		IsJmcDynamicType;//¶¯Ì¬Ìø×ªÀàĞÍ	
-	//STbool		IsJmcNextType;//JMCºÍCALLÖ®ºóµÄ´úÂë
+	STbool		IsJmcType;//è·³è½¬
+	STbool		IsJmcFromType;//ä»å…¶ä»–åœ°æ–¹è·³è½¬è¿‡æ¥çš„ä»£ç 
+	STbool		IsJmcBeSideType;//è·³åˆ°å¤–éƒ¨çš„æŒ‡ä»¤
+	STbool		IsJmcUndefineType;//è·³åˆ°ä»£ç å†…ä¸æ˜ç¡®çš„åœ°å€
+	STbool		IsJmcDynamicType;//åŠ¨æ€è·³è½¬ç±»å‹	
+	//STbool		IsJmcNextType;//JMCå’ŒCALLä¹‹åçš„ä»£ç 
 
-	STbool		IsCallType;//µ÷ÓÃÄÚ²¿º¯Êı
-	STbool		IsCallFromType;//´ÓÆäËûµØ·½Ìø×ª¹ıÀ´µÄ´úÂë
-	STbool		IsCallBeSideType;//Ìøµ½Íâ²¿µÄÖ¸Áî
-	STbool		IsCallUndefineType;//Ìøµ½´úÂëÄÚ²»Ã÷È·µÄµØÖ·
-	STbool		IsCallDynamicType;//¶¯Ì¬Ìø×ªÀàĞÍ	
-	//BOOL		IsCallNextType;//JMCºÍCALLÖ®ºóµÄ´úÂë
+	STbool		IsCallType;//è°ƒç”¨å†…éƒ¨å‡½æ•°
+	STbool		IsCallFromType;//ä»å…¶ä»–åœ°æ–¹è·³è½¬è¿‡æ¥çš„ä»£ç 
+	STbool		IsCallBeSideType;//è·³åˆ°å¤–éƒ¨çš„æŒ‡ä»¤
+	STbool		IsCallUndefineType;//è·³åˆ°ä»£ç å†…ä¸æ˜ç¡®çš„åœ°å€
+	STbool		IsCallDynamicType;//åŠ¨æ€è·³è½¬ç±»å‹	
+	//BOOL		IsCallNextType;//JMCå’ŒCALLä¹‹åçš„ä»£ç 
 	CodeNode()
 	{
 		memset(this,0,sizeof(CodeNode));
 	}
-	//ÖØÔØÔËËã·û
+	//é‡è½½è¿ç®—ç¬¦
 	bool operator==(const CodeNode& node)const
 	{
 		return this->disasm.ip==node.disasm.ip;
@@ -402,7 +402,7 @@ odunique int       lockedbus;            // Accept LOCK prefixes
 odunique int       stackalign;           // Accept unaligned stack operations
 odunique int       iswindowsnt;          // When checking for dangers, assume NT
 //bughoho
-odunique int	   stoperand;			 //µ±Ç°µÄÑ­»·
+odunique int	   stoperand;			 //å½“å‰çš„å¾ªç¯
 
 int    Assemble(char *cmd,ulong ip,t_asmmodel *model,int attempt,
 				int constsize,char *errtext);

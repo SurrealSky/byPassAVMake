@@ -1,4 +1,4 @@
-// Free Disassembler and Assembler -- Command data and service routines
+ï»¿// Free Disassembler and Assembler -- Command data and service routines
 //
 // Copyright (C) 2001 Oleh Yuschuk
 //
@@ -29,7 +29,7 @@
 #include <float.h>
 #pragma hdrstop
 
-#pragma   warning(disable:4996)//¹Ø±Õ¾Éº¯ÊýÉùÃ÷¾¯¸æ
+#pragma   warning(disable:4996)//å…³é—­æ—§å‡½æ•°å£°æ˜Žè­¦å‘Š
 
 #include "disasm.h"
 
@@ -898,4 +898,4 @@ int Isfilling(ulong addr,char *data,ulong size,ulong align) {
   return 0;
 };
 
-  
+  
