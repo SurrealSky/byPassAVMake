@@ -133,6 +133,8 @@ BOOL CbyPassAVMakeDlg::OnInitDialog()
 	CheckDlgButton(IDC_RADIO4, TRUE);
 	mPort.SetWindowTextA("8181");
 
+	//MemMgr::GetInstance().SetDebug2File(true);
+
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
 

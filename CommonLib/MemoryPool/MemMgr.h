@@ -31,7 +31,7 @@ namespace SurrealMemMgr
 	{
 	public:
 		static MemMgr &GetInstance();
-		int GetState();
+		void SetDebug2File(bool);
 	private:
 		MemMgr();
 		~MemMgr();
@@ -40,6 +40,7 @@ namespace SurrealMemMgr
 	private:
 		class MemManager;
 		MemManager * pImpl;
+		bool isDebug2File;
 	public:
 		STu8* CommonAlloc(const MemAllocType, const STu64 dwSize);
 		void CommonDeallocate(const MemAllocType, STu8 *p, const STu64 Size = 0);
