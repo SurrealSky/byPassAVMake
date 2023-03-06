@@ -4,6 +4,8 @@
 
 #pragma once
 #include"MyListCtrl.h"
+#include<list>
+#include<stack>
 
 
 /*****数据包封装

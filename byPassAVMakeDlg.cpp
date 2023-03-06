@@ -7,7 +7,6 @@
 #include "byPassAVMake.h"
 #include "byPassAVMakeDlg.h"
 #include "afxdialogex.h"
-#include<disasm/disasm.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -490,7 +489,7 @@ void CbyPassAVMakeDlg::ConfusionCodes(STu8 *oricode, STu32 oricodesize, STu8 ** 
 //捆绑stage payload
 void CbyPassAVMakeDlg::OnBnClickedButton1()
 {
-	// TODO: 在此添加控件通知处理程序代码
+	UpdateData(TRUE);
 	CString strName;
 	mSecName.GetWindowText(strName);
 	if (strName.GetLength() == 0)
@@ -617,7 +616,7 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 	if (bRet)
 	{
 		OnSaveAs();
-		CDialogEx::OnOK();
+		//CDialogEx::OnOK();
 	}
 	else
 		CDialogEx::OnCancel();
@@ -626,6 +625,7 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 //捆绑stageless url
 void CbyPassAVMakeDlg::OnBnClickedButton5()
 {
+	UpdateData(TRUE);
 	CString strName;
 	mSecName.GetWindowText(strName);
 	if (strName.GetLength() == 0)
@@ -705,7 +705,7 @@ void CbyPassAVMakeDlg::OnBnClickedButton5()
 	if (bRet)
 	{
 		OnSaveAs();
-		CDialogEx::OnOK();
+		//CDialogEx::OnOK();
 	}
 	else
 		CDialogEx::OnCancel();

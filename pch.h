@@ -27,3 +27,17 @@ using namespace SurrealMemMgr;
 #else
 #pragma comment(lib, "CommonLib\\MemoryPool\\bin\\MemMgr.lib")
 #endif
+
+#include<CTree.h>
+#include<disasm/disasm.h>
+
+typedef struct _AddrNode
+{
+	ulong ip;
+	ulong addrconst;
+	ulong offset;
+	_AddrNode()
+	{
+		memset(this, 0, sizeof(_AddrNode));
+	}
+}AddrNode, * PAddrNode;
