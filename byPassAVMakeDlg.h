@@ -9,8 +9,8 @@
 
 
 /*****数据包封装
-* |STu8		|STu32			|STu8*		|
-* |加密类型	|加密数据长度	|加密数据	|
+* |STu8		|STu8*			|STu32			|STu8*		|
+* |加密类型	|密钥（16字节）	|加密数据长度	|加密数据	|
 ******/
 
 //加密类型
@@ -80,12 +80,15 @@ public:
 	void OnSaveAs();
 	BOOL InitDisaDate(STu8*, STu32);
 	void ConfusionCodes(STu8*, STu32, STu8**, STu32*);
+	void Randomkey(unsigned char* key, unsigned int len);
 	void encrypt_tea(unsigned long* in, unsigned long* key, unsigned long* out);
 	void decrypt_tea(unsigned long* in, unsigned long* key, unsigned long* out);
 	void tea_encrypt(unsigned char * v, unsigned int len,unsigned char * key,unsigned char ** out,unsigned int * outlen);
 	void tea_decrypt(unsigned char* v, unsigned int len, unsigned char* key, unsigned char** out, unsigned int* outlen);
 	afx_msg void OnBnClickedButton5();
 	CEdit mPort;
+	afx_msg void OnBnClickedButton6();
+	afx_msg void OnBnClickedButton7();
 };
 
 

