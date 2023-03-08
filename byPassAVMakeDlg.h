@@ -89,6 +89,7 @@ public:
 	CEdit mPort;
 	afx_msg void OnBnClickedButton6();
 	afx_msg void OnBnClickedButton7();
+	afx_msg void OnBnClickedButton8();
 };
 
 
