@@ -1,7 +1,4 @@
 # 木马免杀制作器
-配合https://github.com/SurrealSky/shellcode_launcher使用。
-
-# BypassAntiVirus
 
 **本项目是本人对木马免杀技术的研究，技术可能来自于个人脑洞以及互联网！**
 
