@@ -712,7 +712,7 @@ void CbyPassAVMakeDlg::OnBnClickedButton1()
 	}
 
 	//shellcode数据添加到目标程序新区段
-	bool bRet = mPEMake.AddSectionToEnd((STu8*)strName.GetBuffer(0), encPacket.contents(), encPacket.size(), IMAGE_SCN_MEM_READ /* | IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE*/);
+	bool bRet = mPEMake.AddSectionToEnd((STu8*)strName.GetBuffer(0), encPacket.contents(), encPacket.size(), IMAGE_SCN_MEM_READ /* | IMAGE_SCN_MEM_WRITE  | IMAGE_SCN_MEM_EXECUTE */);
 	if (bRet)
 	{
 		OnSaveAs();
