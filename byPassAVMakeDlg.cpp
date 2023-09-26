@@ -566,6 +566,7 @@ void CbyPassAVMakeDlg::OnBnClickedButton8()
 	if (nopbytes)
 		memset(pVirMem, 0x90, nopbytes);
 
+	dwShellCodeSize += nopbytes;
 	//STu8* shellcode = 0;
 	//STu32 shellcodesize = 0;
 	//ConfusionCodes(pVirMem + nopbytes, dwShellCodeSize, &shellcode, &shellcodesize);
